@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Campus Rides — ShareSphere</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-brand"><a href="index.html"><span class="logo-icon">🌐</span><span class="logo-text">ShareSphere</span></a></div>
+  <div class="nav-links" id="navLinks"><a href="items.html">Browse</a><a href="index.html#categories">Categories</a></div>
+  <div class="nav-actions" id="navActions"></div>
+</nav>
+
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h2>🚕 Campus Rides & Cab Pooling</h2>
+      <p style="color:var(--text-muted);margin-top:0.25rem">Share rides to stations, airports, metro, or nearby cities during breaks and weekends.</p>
+    </div>
+    <button class="btn btn-primary" onclick="openRideModal()">+ Post Ride</button>
+  </div>
+
+  <div class="tabs-header">
+    <button class="tab-btn active" id="tabUpcoming" onclick="switchTab('upcoming')">Upcoming Rides</button>
+    <button class="tab-btn" id="tabMine" onclick="switchTab('mine')">My Rides</button>
+  </div>
+
+  <div id="ridesList"></div>
+  <div id="myRidesList" class="hidden"></div>
+</div>
+
+<!-- Post Ride Modal -->
+<div id="rideModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;display:flex;align-items:center;justify-content:center;padding:1rem;">
+  <div style="background:var(--bg-card2);border:1px solid var(--border);border-radius:20px;padding:2rem;max-width:560px;width:100%;max-height:90vh;overflow:auto;">
+    <h3 style="margin-bottom:1rem">🚗 Post a Ride</h3>
+    <div id="rideError" class="alert alert-error hidden"></div>
+    <form id="rideForm">
+      <div class="form-row">
+        <div class="form-group"><label>Origin *</label><input type="text" id="rideOrigin" class="form-control" list="landmarkOptions" placeholder="Campus Gate / Hostel" required></div>
+        <div class="form-group"><label>Destination *</label><input type="text" id="rideDestination" class="form-control" list="landmarkOptions" placeholder="Railway Station / Airport" required></div>
+      </div>
+      <datalist id="landmarkOptions"></datalist>
+      <div class="form-row">
+        <div class="form-group"><label>Departure *</label><input type="datetime-local" id="rideDeparture" class="form-control" required></div>
+        <div class="form-group"><label>Total Seats *</label><input type="number" id="rideSeats" class="form-control" value="3" min="1" max="8" required></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Price per Seat (₹)</label><input type="number" id="ridePrice" class="form-control" placeholder="Optional / Free" min="0"></div>
+        <div class="form-group"><label>Vehicle Type</label>
+          <select id="rideVehicle" class="form-control">
+            <option value="Personal Car">Personal Car</option>
+            <option value="Cab (Uber/Ola)">Cab (Uber/Ola)</option>
+            <option value="Auto Rickshaw">Auto Rickshaw</option>
+            <option value="Bike">Bike</option>
+            <option value="Bus / Van">Bus / Van</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label>Notes</label><textarea id="rideNotes" class="form-control" rows="3" placeholder="Pickup point, luggage allowance, split policy..."></textarea></div>
+      <div style="display:flex;gap:0.75rem;justify-content:flex-end;margin-top:1rem;">
+        <button type="button" class="btn btn-ghost" onclick="closeRideModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Post Ride</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+<script src="js/api.js"></script><script src="js/app.js"></script>
+<script>
+const me = JSON.parse(localStorage.getItem('ss_user')||'null');
+
+function switchTab(tab) {
+  document.getElementById('tabUpcoming').classList.toggle('active', tab === 'upcoming');
+  document.getElementById('tabMine').classList.toggle('active', tab === 'mine');
+  document.getElementById('ridesList').classList.toggle('hidden', tab !== 'upcoming');
+  document.getElementById('myRidesList').classList.toggle('hidden', tab !== 'mine');
+  if (tab === 'mine') loadMyRides();
+}
+
+async function loadAll() {
+  await loadLandmarks();
+  await loadUpcomingRides();
+  if (me) await loadMyRides();
+}
+
+async function loadLandmarks() {
+  const landmarks = await API.get('/api/landmarks').catch(()=>[]);
+  document.getElementById('landmarkOptions').innerHTML = (landmarks||[]).map(l => `<option value="${escapeHtml(l)}">`).join('');
+}
+
+async function loadUpcomingRides() {
+  const rides = await API.get('/api/rides').catch(()=>[]);
+  document.getElementById('ridesList').innerHTML = (rides||[]).length ? (rides||[]).map(r => rideCard(r, false)).join('') : emptyState('No upcoming rides', 'Post a ride or check back soon for campus carpooling.');
+}
+
+async function loadMyRides() {
+  if (!me) { document.getElementById('myRidesList').innerHTML = emptyState('Login required', 'Login to view rides you posted or booked.'); return; }
+  const rides = await API.get('/api/rides/my').catch(()=>[]);
+  document.getElementById('myRidesList').innerHTML = (rides||[]).length ? (rides||[]).map(r => rideCard(r, true)).join('') : emptyState('No rides yet', 'Post a ride or join one from Upcoming Rides.');
+}
+
+function rideStatusClass(status) {
+  if (status === 'FULL') return 'status-full';
+  if (status === 'COMPLETED') return 'status-completed';
+  if (status === 'CANCELLED') return 'status-cancelled';
+  return 'status-open';
+}
+
+function rideCard(r, isMineTab) {
+  const isOrganizer = me?.userId && r.organizer?.id === me.userId;
+  const seatsLeft = r.availableSeats ?? 0;
+  const bookings = r.bookings || [];
+  const passengerNames = bookings.map(b => b.passenger?.name).filter(Boolean).slice(0, 4).join(', ');
+  const canJoin = !isOrganizer && r.status === 'OPEN' && seatsLeft > 0 && !r.userJoined;
+  const canLeave = !isOrganizer && r.userJoined && (r.status === 'OPEN' || r.status === 'FULL');
+  return `<div class="rental-card">
+    <div class="rental-info">
+      <div style="width:70px;height:70px;border-radius:10px;background:linear-gradient(135deg,rgba(59,130,246,0.25),rgba(34,197,94,0.18));display:flex;align-items:center;justify-content:center;font-size:1.8rem;flex-shrink:0;">🚗</div>
+      <div>
+        <h3>${escapeHtml(r.origin)} → ${escapeHtml(r.destination)}</h3>
+        <p>${escapeHtml(r.vehicleType||'Vehicle TBD')} · 👤 ${escapeHtml(r.organizer?.name||'Student')} · ⭐ ${Number(r.organizer?.averageRating||0).toFixed(1)}</p>
+        <p>🕒 ${formatDateTime(r.departureTime)} · 💺 ${seatsLeft}/${r.totalSeats} seats left · ${r.pricePerSeat ? '₹' + Number(r.pricePerSeat).toLocaleString('en-IN') + '/seat' : 'Free / split later'}</p>
+        ${r.notes ? `<p>📝 ${escapeHtml(r.notes)}</p>` : ''}
+        ${bookings.length ? `<p>Passengers: ${escapeHtml(passengerNames)}${bookings.length > 4 ? ' +' + (bookings.length - 4) + ' more' : ''}</p>` : ''}
+      </div>
+    </div>
+    <div class="rental-right">
+      <span class="status-badge ${rideStatusClass(r.status)}">${escapeHtml(r.status)}</span>
+      ${isOrganizer ? '<span class="badge-role">Organizing</span>' : r.userJoined ? '<span class="badge-active">Booked</span>' : ''}
+      <div class="rental-actions">
+        ${canJoin ? `<button onclick="joinRide(${r.id})" class="btn btn-primary btn-sm">Join Ride</button>` : ''}
+        ${canLeave ? `<button onclick="leaveRide(${r.id})" class="btn btn-danger btn-sm">Leave</button>` : ''}
+        ${!me && r.status === 'OPEN' && seatsLeft > 0 ? `<a href="login.html" class="btn btn-primary btn-sm">Login to Join</a>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
+function emptyState(title, text) {
+  return `<div class="empty-state"><div class="empty-icon">🚕</div><h3>${escapeHtml(title)}</h3><p>${escapeHtml(text)}</p></div>`;
+}
+
+async function openRideModal() {
+  if (!me) { window.location = 'login.html'; return; }
+  document.getElementById('rideError').classList.add('hidden');
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  document.getElementById('rideDeparture').min = now.toISOString().slice(0,16);
+  document.getElementById('rideModal').classList.remove('hidden');
+}
+function closeRideModal() { document.getElementById('rideModal').classList.add('hidden'); }
+
+document.getElementById('rideForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const body = {
+    origin: document.getElementById('rideOrigin').value.trim(),
+    destination: document.getElementById('rideDestination').value.trim(),
+    departureTime: document.getElementById('rideDeparture').value,
+    totalSeats: +document.getElementById('rideSeats').value,
+    pricePerSeat: document.getElementById('ridePrice').value ? +document.getElementById('ridePrice').value : null,
+    vehicleType: document.getElementById('rideVehicle').value,
+    notes: document.getElementById('rideNotes').value.trim()
+  };
+  try {
+    await API.post('/api/rides', body);
+    showToast('Ride posted! 🚗', 'success');
+    closeRideModal();
+    document.getElementById('rideForm').reset();
+    await loadAll();
+    switchTab('mine');
+  } catch(err) {
+    const el = document.getElementById('rideError');
+    el.textContent = err.message; el.classList.remove('hidden');
+  }
+});
+
+async function joinRide(id) {
+  if (!me) { window.location = 'login.html'; return; }
+  try {
+    await API.post(`/api/rides/${id}/join`);
+    showToast('Seat booked! 🎉', 'success');
+    await loadAll();
+  } catch(err) { showToast(err.message, 'error'); }
+}
+
+async function leaveRide(id) {
+  if (!confirm('Leave this ride?')) return;
+  try {
+    await API.post(`/api/rides/${id}/cancel`);
+    showToast('Booking cancelled', 'info');
+    await loadAll();
+  } catch(err) { showToast(err.message, 'error'); }
+}
+
+loadAll();
+updateNavForAuth();
+</script>
+</body></html>

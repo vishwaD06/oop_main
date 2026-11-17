@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ShareSphere — Campus Asset Exchange</title>
+<meta name="description" content="Buy, sell, rent and lend campus items with AI-powered recommendations.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<!-- NAV -->
+<nav class="navbar" id="navbar">
+  <div class="nav-brand">
+    <a href="index.html" style="text-decoration:none;color:inherit;display:flex;align-items:center;gap:8px;">
+      <span class="logo-icon">🌐</span>
+      <span class="logo-text">ShareSphere</span>
+    </a>
+  </div>
+  <div class="nav-links" id="navLinks">
+    <a href="items.html">Browse</a>
+    <a href="items.html?ai=1">🤖 AI Search</a>
+    <a href="requests.html">🔍 Looking For</a>
+    <a href="rides.html">🚕 Rides</a>
+    <a href="#categories">Categories</a>
+  </div>
+  <div class="nav-actions" id="navActions">
+    <a href="login.html" class="btn btn-ghost">Login</a>
+    <a href="register.html" class="btn btn-primary">Get Started</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="hero-badge">🎓 For Students, By Students</div>
+    <h1 class="hero-title">Share More.<br><span class="gradient-text">Spend Less.</span></h1>
+    <p class="hero-subtitle">Your campus marketplace for buying, renting and sharing everything you need — powered by AI recommendations.</p>
+    <div class="hero-search">
+      <input type="text" id="heroSearch" placeholder='Try: "calculator for 2 days" or "Arduino kit"' class="hero-search-input">
+      <button onclick="doHeroSearch()" class="btn btn-primary btn-lg">🤖 AI Search</button>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><span class="stat-num" id="statItems">15+</span><span class="stat-label">Items Listed</span></div>
+      <div class="stat"><span class="stat-num" id="statUsers">6+</span><span class="stat-label">Students</span></div>
+      <div class="stat"><span class="stat-num">14</span><span class="stat-label">Categories</span></div>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="floating-card card-1"><span>📷</span><div><strong>DSLR Camera</strong><br><small>₹300/day</small></div></div>
+    <div class="floating-card card-2"><span>🧮</span><div><strong>Calculator</strong><br><small>₹30/day</small></div></div>
+    <div class="floating-card card-3"><span>🚲</span><div><strong>Mountain Bike</strong><br><small>₹100/day</small></div></div>
+    <div class="floating-card card-4"><span>📚</span><div><strong>CLRS Book</strong><br><small>₹1200</small></div></div>
+  </div>
+</section>
+
+<!-- CATEGORIES -->
+<section class="section" id="categories">
+  <div class="container">
+    <div class="section-header"><h2>Browse Categories</h2><p>Find exactly what you need</p></div>
+    <div class="category-grid" id="categoryGrid">
+      <a href="items.html?categoryId=1" class="category-card"><div class="cat-icon">💻</div><div class="cat-name">Electronics</div></a>
+      <a href="items.html?categoryId=2" class="category-card"><div class="cat-icon">📚</div><div class="cat-name">Books</div></a>
+      <a href="items.html?categoryId=3" class="category-card"><div class="cat-icon">🧮</div><div class="cat-name">Calculators</div></a>
+      <a href="items.html?categoryId=4" class="category-card"><div class="cat-icon">📐</div><div class="cat-name">Engineering Tools</div></a>
+      <a href="items.html?categoryId=5" class="category-card"><div class="cat-icon">🔬</div><div class="cat-name">Lab Equipment</div></a>
+      <a href="items.html?categoryId=6" class="category-card"><div class="cat-icon">⚽</div><div class="cat-name">Sports Equipment</div></a>
+      <a href="items.html?categoryId=7" class="category-card"><div class="cat-icon">🪑</div><div class="cat-name">Furniture</div></a>
+      <a href="items.html?categoryId=8" class="category-card"><div class="cat-icon">🚲</div><div class="cat-name">Cycles</div></a>
+    </div>
+  </div>
+</section>
+
+<!-- POPULAR ITEMS -->
+<section class="section section-dark">
+  <div class="container">
+    <div class="section-header">
+      <h2>🔥 Popular Items</h2>
+      <a href="items.html" class="btn btn-ghost btn-sm">View All →</a>
+    </div>
+    <div class="items-grid" id="popularGrid">
+      <div class="item-card" onclick="window.location='item-detail.html?id=1'">
+        <div class="item-image-wrap">
+          <img src="https://images.unsplash.com/photo-1594980596870-8aa52a78d8cd?w=600&auto=format&fit=crop&q=80" alt="Casio FX-991CW">
+          <span class="item-badge badge-sell_and_rent">SELL &amp; RENT</span>
+        </div>
+        <div class="item-body">
+          <div class="item-category">🧮 Calculators</div>
+          <h3>Casio FX-991CW Scientific Calculator</h3>
+          <div class="item-price">₹900 · ₹30/day</div>
+          <div class="item-footer">
+            <span class="item-condition">Like New</span>
+            <span class="item-rating">⭐ 4.8</span>
+            <span class="item-location">📍 Hostel A</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="item-card" onclick="window.location='item-detail.html?id=2'">
+        <div class="item-image-wrap">
+          <img src="https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=600&auto=format&fit=crop&q=80" alt="DSLR Camera">
+          <span class="item-badge badge-sell_and_rent">SELL &amp; RENT</span>
+        </div>
+        <div class="item-body">
+          <div class="item-category">💻 Electronics</div>
+          <h3>DSLR Camera Canon 200D</h3>
+          <div class="item-price">₹28000 · ₹300/day</div>
+          <div class="item-footer">
+            <span class="item-condition">Good</span>
+            <span class="item-rating">⭐ 5.0</span>
+            <span class="item-location">📍 Hostel A</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="item-card" onclick="window.location='item-detail.html?id=3'">
+        <div class="item-image-wrap">
+          <img src="https://images.unsplash.com/photo-1553406830-ef2513450d76?w=600&auto=format&fit=crop&q=80" alt="Arduino Kit">
+          <span class="item-badge badge-sell_and_rent">SELL &amp; RENT</span>
+        </div>
+        <div class="item-body">
+          <div class="item-category">💻 Electronics</div>
+          <h3>Arduino Uno Starter Kit</h3>
+          <div class="item-price">₹1500 · ₹50/day</div>
+          <div class="item-footer">
+            <span class="item-condition">New</span>
+            <span class="item-rating">⭐ 4.7</span>
+            <span class="item-location">📍 Lab Block</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="item-card" onclick="window.location='item-detail.html?id=5'">
+        <div class="item-image-wrap">
+          <img src="https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=600&auto=format&fit=crop&q=80" alt="Mountain Bicycle">
+          <span class="item-badge badge-sell_and_rent">SELL &amp; RENT</span>
+        </div>
+        <div class="item-body">
+          <div class="item-category">🚲 Cycles</div>
+          <h3>Mountain Bicycle - Hero Sprint</h3>
+          <div class="item-price">₹6000 · ₹100/day</div>
+          <div class="item-footer">
+            <span class="item-condition">Good</span>
+            <span class="item-rating">⭐ 4.9</span>
+            <span class="item-location">📍 Parking Lot B</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section">
+  <div class="container">
+    <div class="section-header"><h2>How It Works</h2></div>
+    <div class="steps-grid">
+      <div class="step-card"><div class="step-num">1</div><div class="step-icon">📝</div><h3>List Your Item</h3><p>List unused items for sale, rent or lending in minutes</p></div>
+      <div class="step-card"><div class="step-num">2</div><div class="step-icon">🤖</div><h3>AI Matches You</h3><p>Our AI recommends the right item at the right price</p></div>
+      <div class="step-card"><div class="step-num">3</div><div class="step-icon">🤝</div><h3>Connect & Transact</h3><p>Chat with sellers, rent or buy securely</p></div>
+      <div class="step-card"><div class="step-num">4</div><div class="step-icon">⭐</div><h3>Rate & Review</h3><p>Build campus trust with reviews and ratings</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- LATEST ITEMS -->
+<section class="section section-dark">
+  <div class="container">
+    <div class="section-header"><h2>🆕 Latest Listings</h2><a href="items.html" class="btn btn-ghost btn-sm">See All →</a></div>
+    <div class="items-grid" id="latestGrid">
+      <div class="item-card" onclick="window.location='item-detail.html?id=6'">
+        <div class="item-image-wrap">
+          <img src="https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=600&auto=format&fit=crop&q=80" alt="CLRS Book">
+          <span class="item-badge badge-sell">SELL</span>
+        </div>
+        <div class="item-body">
+          <div class="item-category">📚 Books</div>
+          <h3>Data Structures &amp; Algorithms - CLRS 4th Ed</h3>
+          <div class="item-price">₹1200</div>
+          <div class="item-footer">
+            <span class="item-condition">Like New</span>
+            <span class="item-rating">⭐ 5.0</span>
+            <span class="item-location">📍 Library Block</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="item-card" onclick="window.location='item-detail.html?id=7'">
+        <div class="item-image-wrap">
+          <img src="https://images.unsplash.com/photo-1517077304055-6e89abbf09b0?w=600&auto=format&fit=crop&q=80" alt="Raspberry Pi">
+          <span class="item-badge badge-sell_and_rent">SELL &amp; RENT</span>
+        </div>
+        <div class="item-body">
+          <div class="item-category">💻 Electronics</div>
+          <h3>Raspberry Pi 4 Model B (4GB)</h3>
+          <div class="item-price">₹5500 · ₹150/day</div>
+          <div class="item-footer">
+            <span class="item-condition">New</span>
+            <span class="item-rating">⭐ 4.9</span>
+            <span class="item-location">📍 Lab Block</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="item-card" onclick="window.location='item-detail.html?id=8'">
+        <div class="item-image-wrap">
+          <img src="https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=600&auto=format&fit=crop&q=80" alt="JBL Speaker">
+          <span class="item-badge badge-sell_and_rent">SELL &amp; RENT</span>
+        </div>
+        <div class="item-body">
+          <div class="item-category">💻 Electronics</div>
+          <h3>Wireless Bluetooth Speaker - JBL Go 3</h3>
+          <div class="item-price">₹2500 · ₹70/day</div>
+          <div class="item-footer">
+            <span class="item-condition">Like New</span>
+            <span class="item-rating">⭐ 4.8</span>
+            <span class="item-location">📍 Hostel B</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-content">
+      <div><span class="logo-icon">🌐</span><span class="logo-text">ShareSphere</span>
+        <p>Share More. Spend Less.</p></div>
+      <div class="footer-links">
+        <a href="items.html">Browse Items</a>
+        <a href="requests.html">Looking For</a>
+        <a href="rides.html">Rides</a>
+        <a href="login.html">Login</a>
+        <a href="register.html">Register</a>
+      </div>
+    </div>
+    <div class="footer-bottom"><p>© 2024 ShareSphere — Campus Asset Exchange Platform</p></div>
+  </div>
+</footer>
+
+<div id="toast" class="toast hidden"></div>
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+<script>
+async function loadHomePage() {
+  try {
+    const cats = await API.get('/api/categories');
+    const grid = document.getElementById('categoryGrid');
+    if (cats && cats.length) {
+      grid.innerHTML = cats.map(c => `
+        <a href="items.html?categoryId=${c.id}" class="category-card">
+          <div class="cat-icon">${c.icon}</div>
+          <div class="cat-name">${c.name}</div>
+        </a>`).join('');
+    }
+  } catch(e){}
+
+  try {
+    const popular = await API.get('/api/items/popular');
+    if (popular && popular.length) {
+      document.getElementById('popularGrid').innerHTML = popular.map(renderItemCard).join('');
+    }
+  } catch(e){}
+
+  try {
+    const latest = await API.get('/api/items/latest');
+    if (latest && latest.length) {
+      document.getElementById('latestGrid').innerHTML = latest.map(renderItemCard).join('');
+    }
+  } catch(e){}
+}
+
+function doHeroSearch() {
+  const q = document.getElementById('heroSearch').value.trim();
+  if (!q) return;
+  window.location.href = `items.html?ai=1&query=${encodeURIComponent(q)}`;
+}
+document.getElementById('heroSearch').addEventListener('keydown', e => { if(e.key==='Enter') doHeroSearch(); });
+loadHomePage();
+updateNavForAuth();
+</script>
+</body></html>

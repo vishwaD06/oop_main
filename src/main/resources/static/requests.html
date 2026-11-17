@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Looking For — ShareSphere</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-brand"><a href="index.html"><span class="logo-icon">🌐</span><span class="logo-text">ShareSphere</span></a></div>
+  <div class="nav-links" id="navLinks"><a href="items.html">Browse</a><a href="index.html#categories">Categories</a></div>
+  <div class="nav-actions" id="navActions"></div>
+</nav>
+
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h2>🔍 Looking For</h2>
+      <p style="color:var(--text-muted);margin-top:0.25rem">Post what you need and let nearby students help on the spot.</p>
+    </div>
+    <button class="btn btn-primary" onclick="openPostModal()">+ Post Request</button>
+  </div>
+
+  <div class="tabs-header">
+    <button class="tab-btn active" id="tabBrowse" onclick="switchTab('browse')">Open Requests</button>
+    <button class="tab-btn" id="tabMine" onclick="switchTab('mine')">My Requests</button>
+  </div>
+
+  <div id="browseList"></div>
+  <div id="myList" class="hidden"></div>
+</div>
+
+<!-- Post Request Modal -->
+<div id="postModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;display:flex;align-items:center;justify-content:center;padding:1rem;">
+  <div style="background:var(--bg-card2);border:1px solid var(--border);border-radius:20px;padding:2rem;max-width:560px;width:100%;max-height:90vh;overflow:auto;">
+    <h3 style="margin-bottom:1rem">📝 Post a “Looking For” Request</h3>
+    <div id="postError" class="alert alert-error hidden"></div>
+    <form id="postForm">
+      <div class="form-group"><label>What do you need? *</label><input type="text" id="reqTitle" class="form-control" placeholder="e.g. HDMI adapter for 2 hours today" required></div>
+      <div class="form-row">
+        <div class="form-group"><label>Category</label><select id="reqCategory" class="form-control"><option value="">Any category</option></select></div>
+        <div class="form-group"><label>Budget (₹)</label><input type="number" id="reqBudget" class="form-control" placeholder="Optional" min="0"></div>
+      </div>
+      <div class="form-group"><label>Description</label><textarea id="reqDesc" class="form-control" rows="3" placeholder="Add details, condition expectations, or timing..."></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label>Location / Area</label><input type="text" id="reqLocation" class="form-control" placeholder="e.g. Hostel A, Seminar Hall"></div>
+        <div class="form-group"><label>Urgency</label><select id="reqUrgency" class="form-control"><option value="LOW">Low</option><option value="MEDIUM" selected>Medium</option><option value="URGENT">Urgent</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Needed Timeframe</label><input type="text" id="reqTimeframe" class="form-control" placeholder="e.g. Today 4-6 PM, 1 week"></div>
+        <div class="form-group"><label>🏫 Handover Spot</label><select id="reqLandmark" class="form-control"><option value="">Select landmark...</option></select></div>
+      </div>
+      <div style="display:flex;gap:0.75rem;justify-content:flex-end;margin-top:1rem;">
+        <button type="button" class="btn btn-ghost" onclick="closePostModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Post Request</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Request Detail Modal -->
+<div id="requestModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;display:flex;align-items:center;justify-content:center;padding:1rem;">
+  <div style="background:var(--bg-card2);border:1px solid var(--border);border-radius:20px;padding:2rem;max-width:640px;width:100%;max-height:90vh;overflow:auto;">
+    <div id="requestDetail"></div>
+  </div>
+</div>
+
+<!-- Offer Modal -->
+<div id="offerModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:600;display:flex;align-items:center;justify-content:center;padding:1rem;">
+  <div style="background:var(--bg-card2);border:1px solid var(--border);border-radius:20px;padding:2rem;max-width:520px;width:100%;">
+    <h3 style="margin-bottom:1rem">🤝 Make an Offer</h3>
+    <div id="offerError" class="alert alert-error hidden"></div>
+    <form id="offerForm">
+      <div class="form-group"><label>Message *</label><textarea id="offerMessage" class="form-control" rows="3" placeholder="I can help with this! I have..." required></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label>Price Offered (₹)</label><input type="number" id="offerPrice" class="form-control" placeholder="Optional" min="0"></div>
+        <div class="form-group"><label>Link Your Item</label><select id="offerItem" class="form-control"><option value="">No linked item</option></select></div>
+      </div>
+      <div style="display:flex;gap:0.75rem;justify-content:flex-end;margin-top:1rem;">
+        <button type="button" class="btn btn-ghost" onclick="closeOfferModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Send Offer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+<script src="js/api.js"></script><script src="js/app.js"></script>
+<script>
+const me = JSON.parse(localStorage.getItem('ss_user')||'null');
+let currentRequest = null;
+let offerRequestId = null;
+let myItemsCache = null;
+
+function switchTab(tab) {
+  document.getElementById('tabBrowse').classList.toggle('active', tab === 'browse');
+  document.getElementById('tabMine').classList.toggle('active', tab === 'mine');
+  document.getElementById('browseList').classList.toggle('hidden', tab !== 'browse');
+  document.getElementById('myList').classList.toggle('hidden', tab !== 'mine');
+  if (tab === 'mine') loadMyRequests();
+}
+
+async function loadAll() {
+  await Promise.all([loadCategories(), loadLandmarks()]);
+  await loadOpenRequests();
+  if (me) await loadMyRequests();
+}
+
+async function loadCategories() {
+  const cats = await API.get('/api/categories').catch(()=>[]);
+  const sel = document.getElementById('reqCategory');
+  sel.innerHTML = '<option value="">Any category</option>' + (cats||[]).map(c => `<option value="${c.id}">${escapeHtml(c.icon||'')} ${escapeHtml(c.name||'')}</option>`).join('');
+}
+
+async function loadLandmarks() {
+  const landmarks = await API.get('/api/landmarks').catch(()=>[]);
+  const sel = document.getElementById('reqLandmark');
+  sel.innerHTML = '<option value="">Select landmark...</option>' + (landmarks||[]).map(l => `<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join('');
+}
+
+async function loadOpenRequests() {
+  const requests = await API.get('/api/requests').catch(()=>[]);
+  document.getElementById('browseList').innerHTML = (requests||[]).length ? (requests||[]).map(requestCard).join('') : emptyState('No open requests yet', 'Be the first to post what you need!');
+}
+
+async function loadMyRequests() {
+  if (!me) { document.getElementById('myList').innerHTML = emptyState('Login required', 'Login to view your requests.'); return; }
+  const requests = await API.get('/api/requests/my').catch(()=>[]);
+  document.getElementById('myList').innerHTML = (requests||[]).length ? (requests||[]).map(requestCard).join('') : emptyState('No requests posted', 'Post a “Looking For” request and nearby students can help.');
+}
+
+function requestCard(r) {
+  const isMine = me?.userId && r.requester?.id === me.userId;
+  const statusClass = r.status === 'FULFILLED' ? 'status-completed' : r.status === 'CANCELLED' ? 'status-cancelled' : 'status-requested';
+  return `<div class="rental-card">
+    <div class="rental-info">
+      <div style="width:70px;height:70px;border-radius:10px;background:linear-gradient(135deg,rgba(108,99,255,0.25),rgba(255,101,132,0.18));display:flex;align-items:center;justify-content:center;font-size:1.8rem;flex-shrink:0;">🔍</div>
+      <div>
+        <h3>${escapeHtml(r.title)}</h3>
+        <p>${escapeHtml(r.category?.icon||'')} ${escapeHtml(r.category?.name||'Any category')} · ${escapeHtml(r.requester?.name||'Student')}</p>
+        <p>${r.budget ? 'Budget: ₹' + Number(r.budget).toLocaleString('en-IN') : 'Budget flexible'} · ${escapeHtml(r.neededTimeframe||'Flexible timing')}</p>
+        <p>📍 ${escapeHtml(r.location||'Campus')} ${r.landmark ? '· 🏫 ' + escapeHtml(r.landmark) : ''} · ⏰ ${escapeHtml(r.urgency||'MEDIUM')}</p>
+        <p>${r.offerCount || 0} offer${(r.offerCount||0) === 1 ? '' : 's'} · ${formatDateTime(r.createdAt)}</p>
+      </div>
+    </div>
+    <div class="rental-right">
+      <span class="status-badge ${statusClass}">${escapeHtml(r.status)}</span>
+      <div class="rental-actions">
+        <button onclick="openRequest(${r.id})" class="btn btn-secondary btn-sm">View</button>
+        ${!isMine && r.status === 'OPEN' ? `<button onclick="openOfferModal(${r.id})" class="btn btn-primary btn-sm">Make Offer</button>` : ''}
+        ${isMine && r.status === 'OPEN' ? `<button onclick="openRequest(${r.id})" class="btn btn-primary btn-sm">Manage</button>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
+function emptyState(title, text) {
+  return `<div class="empty-state"><div class="empty-icon">🔍</div><h3>${escapeHtml(title)}</h3><p>${escapeHtml(text)}</p></div>`;
+}
+
+async function openPostModal() {
+  if (!me) { window.location = 'login.html'; return; }
+  document.getElementById('postError').classList.add('hidden');
+  document.getElementById('postModal').classList.remove('hidden');
+}
+function closePostModal() { document.getElementById('postModal').classList.add('hidden'); }
+
+document.getElementById('postForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const body = {
+    title: document.getElementById('reqTitle').value.trim(),
+    description: document.getElementById('reqDesc').value.trim(),
+    categoryId: document.getElementById('reqCategory').value ? +document.getElementById('reqCategory').value : null,
+    location: document.getElementById('reqLocation').value.trim(),
+    landmark: document.getElementById('reqLandmark').value,
+    budget: document.getElementById('reqBudget').value ? +document.getElementById('reqBudget').value : null,
+    neededTimeframe: document.getElementById('reqTimeframe').value.trim(),
+    urgency: document.getElementById('reqUrgency').value
+  };
+  try {
+    await API.post('/api/requests', body);
+    showToast('Request posted! 🔔', 'success');
+    closePostModal();
+    document.getElementById('postForm').reset();
+    await loadAll();
+    switchTab('mine');
+  } catch(err) {
+    const el = document.getElementById('postError');
+    el.textContent = err.message; el.classList.remove('hidden');
+  }
+});
+
+async function openRequest(id) {
+  const r = await API.get(`/api/requests/${id}`).catch(()=>null);
+  if (!r) { showToast('Could not load request', 'error'); return; }
+  currentRequest = r;
+  const isMine = me?.userId && r.requester?.id === me.userId;
+  const offers = r.offers || [];
+  document.getElementById('requestDetail').innerHTML = `
+    <div style="display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;margin-bottom:1rem;">
+      <div>
+        <h3 style="font-size:1.35rem;font-weight:800;">${escapeHtml(r.title)}</h3>
+        <p style="color:var(--text-muted);font-size:0.85rem;">${escapeHtml(r.category?.icon||'')} ${escapeHtml(r.category?.name||'Any category')} · ${escapeHtml(r.requester?.name||'Student')} · ${formatDateTime(r.createdAt)}</p>
+      </div>
+      <span class="status-badge ${r.status==='FULFILLED'?'status-completed':r.status==='CANCELLED'?'status-cancelled':'status-requested'}">${escapeHtml(r.status)}</span>
+    </div>
+    <p style="color:var(--text-secondary);line-height:1.7;margin-bottom:1rem;">${escapeHtml(r.description||'No description provided.')}</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1rem;font-size:0.9rem;">
+      <div>💰 Budget: <strong>${r.budget ? '₹' + Number(r.budget).toLocaleString('en-IN') : 'Flexible'}</strong></div>
+      <div>⏰ Timeframe: <strong>${escapeHtml(r.neededTimeframe||'Flexible')}</strong></div>
+      <div>📍 Location: <strong>${escapeHtml(r.location||'Campus')}</strong></div>
+      <div>🏫 Handover: <strong>${escapeHtml(r.landmark||'To be decided')}</strong></div>
+      <div>⚡ Urgency: <strong>${escapeHtml(r.urgency||'MEDIUM')}</strong></div>
+      <div>🤝 Offers: <strong>${offers.length}</strong></div>
+    </div>
+    <div style="margin-bottom:1.25rem;">
+      <h4 style="margin-bottom:0.75rem;">Offers (${offers.length})</h4>
+      ${offers.length ? offers.map(o => `
+        <div style="background:var(--bg-input);border-radius:12px;padding:0.9rem;margin-bottom:0.65rem;">
+          <div style="display:flex;justify-content:space-between;gap:1rem;">
+            <strong>${escapeHtml(o.offerer?.name||'Student')}</strong>
+            <span style="color:var(--primary-light);font-weight:700;">${o.priceOffered ? '₹' + Number(o.priceOffered).toLocaleString('en-IN') : 'Negotiable'}</span>
+          </div>
+          <p style="color:var(--text-secondary);font-size:0.88rem;margin:0.35rem 0;">${escapeHtml(o.message)}</p>
+          ${o.linkedItem ? `<a class="link" href="item-detail.html?id=${o.linkedItem.id}">View linked item: ${escapeHtml(o.linkedItem.name)}</a>` : ''}
+          <div style="margin-top:0.5rem;"><button onclick="contactOfferer(${o.offerer?.id||0})" class="btn btn-ghost btn-sm">💬 Contact</button></div>
+        </div>`).join('') : '<p style="color:var(--text-muted);font-size:0.9rem;">No offers yet.</p>'}
+    </div>
+    <div style="display:flex;gap:0.75rem;justify-content:flex-end;flex-wrap:wrap;">
+      ${!isMine && r.status === 'OPEN' ? `<button onclick="openOfferModal(${r.id})" class="btn btn-primary">Make Offer</button>` : ''}
+      ${isMine && r.status === 'OPEN' ? `<button onclick="fulfillRequest(${r.id})" class="btn btn-success">Mark Fulfilled</button>` : ''}
+      <button onclick="closeRequestModal()" class="btn btn-ghost">Close</button>
+    </div>`;
+  document.getElementById('requestModal').classList.remove('hidden');
+}
+
+function closeRequestModal() { document.getElementById('requestModal').classList.add('hidden'); }
+
+async function fulfillRequest(id) {
+  try {
+    await API.post(`/api/requests/${id}/fulfill`);
+    showToast('Request marked as fulfilled 🎉', 'success');
+    closeRequestModal();
+    await loadAll();
+  } catch(err) { showToast(err.message, 'error'); }
+}
+
+function contactOfferer(userId) {
+  if (!userId) return;
+  window.location = `messages.html?with=${userId}`;
+}
+
+async function openOfferModal(requestId) {
+  if (!me) { window.location = 'login.html'; return; }
+  offerRequestId = requestId;
+  document.getElementById('offerError').classList.add('hidden');
+  document.getElementById('offerMessage').value = '';
+  document.getElementById('offerPrice').value = '';
+  await loadOfferItems();
+  document.getElementById('offerModal').classList.remove('hidden');
+}
+
+async function loadOfferItems() {
+  if (!myItemsCache) {
+    myItemsCache = await API.get('/api/items/my').catch(()=>[]);
+  }
+  const sel = document.getElementById('offerItem');
+  const items = (myItemsCache||[]).filter(i => i.status === 'AVAILABLE');
+  sel.innerHTML = '<option value="">No linked item</option>' + items.map(i => `<option value="${i.id}">${escapeHtml(i.name)}</option>`).join('');
+}
+
+function closeOfferModal() { document.getElementById('offerModal').classList.add('hidden'); }
+
+document.getElementById('offerForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const body = {
+    message: document.getElementById('offerMessage').value.trim(),
+    priceOffered: document.getElementById('offerPrice').value ? +document.getElementById('offerPrice').value : null,
+    linkedItemId: document.getElementById('offerItem').value ? +document.getElementById('offerItem').value : null
+  };
+  try {
+    await API.post(`/api/requests/${offerRequestId}/offers`, body);
+    showToast('Offer sent! 🤝', 'success');
+    closeOfferModal();
+    if (currentRequest?.id === offerRequestId) openRequest(offerRequestId);
+    await loadAll();
+  } catch(err) {
+    const el = document.getElementById('offerError');
+    el.textContent = err.message; el.classList.remove('hidden');
+  }
+});
+
+loadAll();
+updateNavForAuth();
+</script>
+</body></html>
